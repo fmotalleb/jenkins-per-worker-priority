@@ -77,7 +77,7 @@ public final class WorkerPriorityLoadBalancer extends LoadBalancer {
         return null; // no legal placement: let Jenkins retry when executors become free
     }
 
-    /** One entry per assigned work chunk: work id, target node, and the node's score at decision time. */
+    /** One entry per assigned work chunk: chunk index, target node, and the node's score at decision time. */
     private static String describe(MappingWorksheet worksheet, Mapping mapping, int[] busy, int[] assigned) {
         StringBuilder sb = new StringBuilder();
         for (int i = 0; i < mapping.size(); i++) {
@@ -85,7 +85,7 @@ public final class WorkerPriorityLoadBalancer extends LoadBalancer {
             if (sb.length() > 0) {
                 sb.append(", ");
             }
-            sb.append(worksheet.works(i).id).append(" -> ").append(ec.getName())
+            sb.append("work#").append(worksheet.works(i).index).append(" -> ").append(ec.getName())
                     .append(" (score=").append(score(ec.node, busy[ec.index] + assigned[ec.index]))
                     .append(", busy=").append(busy[ec.index]).append(')');
         }
