@@ -1,0 +1,41 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+          cache: maven
+
+      - name: Set project version from tag
+        run: |
+          VERSION="${GITHUB_REF_NAME#v}"
+          echo "Releasing version $VERSION"
+          mvn -B -ntp versions:set -DnewVersion="$VERSION" -DgenerateBackupPoms=false
+          mvn -B -ntp help:evaluate -Dexpression=project.version -q -DforceStdout | grep -qx "$VERSION" || { echo "Version mismatch"; exit 1; }
+
+      - name: Build and test
+        run: mvn -B -ntp -DskipTests=false verify
+
+      - name: Create GitHub release and upload artifact
+        uses: softprops/action-gh-release@v2
+        with:
+          name: ${{ github.ref_name }}
+          draft: false
+          prerelease: ${{ contains(github.ref_name, '-rc') || contains(github.ref_name, '-beta') || contains(github.ref_name, '-alpha') }}
+          files: target/*.hpi
