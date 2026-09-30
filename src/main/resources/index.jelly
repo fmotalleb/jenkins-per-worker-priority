@@ -1,0 +1,5 @@
+<?jelly escape-by-default='true'?>
+<div>
+  Assign a base priority and degradation per occupied executor to each Jenkins worker.
+  The highest-scoring eligible worker with a free executor receives the next job.
+</div>

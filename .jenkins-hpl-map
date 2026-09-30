@@ -1,0 +1,3 @@
+# List of development files for Jenkins plugins that have been built.
+#Wed Sep 30 12:21:49 UTC 2026
+/home/user/target/test-classes/the.hpl=io.github.queuepriority\:worker-priority\:hpi\:1.0-SNAPSHOT
