@@ -35,6 +35,31 @@ mvn test
 mvn package
 ```
 
-Install the generated `target/worker-priority.hpi` through **Manage Jenkins → Plugins → Advanced settings → Deploy Plugin**, then restart Jenkins. A prebuilt snapshot is also provided as `worker-priority.hpi` in this workspace. The tests use the Jenkins test harness to verify the four-job example with live concurrent builds, full-worker fallback, label restrictions, node-configuration GUI round-trip, integer validation/overflow, and unconfigured-node delegation.
+The tests use the Jenkins test harness to verify the four-job example with live concurrent builds, full-worker fallback, label restrictions, node-configuration GUI round-trip, integer validation/overflow, and unconfigured-node delegation.
+
+## Installation
+
+Download the prebuilt plugin binary from the [releases page](https://github.com/fmotalleb/jenkins-per-worker-priority/releases) — every release tag builds and publishes a `worker-priority-<version>.hpi` artifact there. Install it through **Manage Jenkins → Plugins → Advanced settings → Deploy Plugin**, then restart Jenkins. To build the binary yourself instead, run `mvn package` and use the generated `target/worker-priority.hpi`.
 
 **Compatibility:** This installs a `Queue` load balancer at startup. Jenkins supports one installed load balancer at a time; another load-balancing plugin installed later can replace it, so avoid running competing load balancer plugins together. The built-in controller can also be configured as a worker by adding the same Node Property to its node configuration, if it has regular executors. Pipeline flyweight tasks (which do not occupy regular executors) are outside this balancer's placement decisions.
+
+## Logging
+
+The plugin logs through `java.util.logging` under the logger name `io.github.queuepriority.WorkerPriorityLoadBalancer`. By default nothing appears beyond startup, so the scheduling hot path stays quiet.
+
+To inspect placement decisions, add a Log Recorder (**Manage Jenkins → System Log → Add new log recorder**) for that logger name with level `FINE` (or `ALL`). Logged events:
+
+| Level | Event |
+| --- | --- |
+| `INFO` | Load balancer installed at startup. |
+| `FINE` | Task deferred to the previous balancer because no offered worker has the Node Property. |
+| `FINE` | Placement decision: each work chunk's target node, effective score, and busy-executor count at decision time. |
+| `FINE` | No legal placement found; the task waits until executors free up. |
+
+## Versions
+
+- **Minimum Jenkins:** 2.479.3 (Jakarta servlet line)
+- **Java:** 17+
+- **Build tools:** Maven 3.9+ with JDK 17+
+
+Releases are cut from `v`-prefixed Git tags (e.g. `v1.2.0`). CI strips the `v`, sets the plugin version in the build from the tag, and publishes the resulting `worker-priority-<version>.hpi` as a [release artifact](https://github.com/fmotalleb/jenkins-per-worker-priority/releases). The repository itself stays on `1.0-SNAPSHOT` between releases.
